@@ -1,12 +1,17 @@
 {
-  "name": "Start on Heroku: Go",
-  "description": "Go Getting Started Example App",
+  "name": "Numberwang",
+  "description": "That's Numberwang",
   "keywords": [
-    "getting-started",
-    "go",
-    "sample",
-    "example"
+    "Numberwang",
+    "Wangernumb",
+    "Colosson",
+    "P2P",
+    "Golang",
+    "NodeJS",
+    "HTML",
+    "React",
+    "Machine Learning"
   ],
-  "website": "http://github.com/heroku/go-getting-started",
-  "repository": "http://github.com/heroku/go-getting-started"
+  "website": "https://numberwang.herokuapp.com/",
+  "repository": "https://github.com/varmam1/Numberwang"
 }

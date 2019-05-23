@@ -41,3 +41,9 @@
 
 # Instructions:
 How to run the project will go here
+
+# Current State:
+1. Basic Go app that has access to network requests
+	* MUST be in root of repo, unsure on file hierarchy 
+	* Can be deployed to heroku
+	* Changes go in main.go
