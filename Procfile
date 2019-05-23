@@ -1,1 +1,1 @@
-web: bin/Numberwang/go-getting-started
+web: bin/go-getting-started
