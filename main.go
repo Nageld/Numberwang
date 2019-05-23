@@ -19,15 +19,12 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
-	// router.LoadHTMLGlob("templates/*.tmpl.html")
 	router.LoadHTMLGlob("templates/*.html")
-	router.Static("/static", "static")
 
 	router.GET("/", func(c *gin.Context) {
-		// c.HTML(http.StatusOK, "index.tmpl.html", nil)
+		fmt.Println("Hit root")
 		c.HTML(http.StatusOK, "test.html", nil)
 	})
 
 	router.Run(":" + port)
-	// fmt.Println("Hello World")
 }
