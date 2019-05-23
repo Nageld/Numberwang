@@ -37,3 +37,7 @@
 4.  Compose components into final game
     
 5.  Integrate game into p2p / centralized web server
+
+
+# Instructions:
+How to run the project will go here
