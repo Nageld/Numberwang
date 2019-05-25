@@ -12,7 +12,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-
+	"fmt"	
 	"github.com/gorilla/websocket"
 )
 
@@ -51,6 +51,7 @@ func main() {
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
+	fmt.print(r.Host)
 	log.Fatal(http.ListenAndServe(":" + port, nil))
 }
 
@@ -76,7 +77,7 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("{{.}}");
+        ws = new WebSocket("ws://https://numberwang.herokuapp.com/echo");
         ws.onopen = function(evt) {
             print("OPEN");
         }
