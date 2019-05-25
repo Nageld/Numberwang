@@ -17,8 +17,6 @@ import (
 )
 
 var port = os.Getenv("PORT")
-var addr = flag.String("addr", "localhost:" + string(port), "http service address")
-
 
 var upgrader = websocket.Upgrader{} // use default options
 
@@ -53,7 +51,7 @@ func main() {
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Fatal(http.ListenAndServe(":" + port, nil))
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
