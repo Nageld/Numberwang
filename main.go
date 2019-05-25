@@ -30,7 +30,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	log.SetOutput(file)
-	log.Print(r)
+	log.Print("test_print")
 
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
