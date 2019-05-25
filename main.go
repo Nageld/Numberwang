@@ -8,6 +8,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,7 +16,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var port = os.Getenv("PORT")
+var addr = flag.String("addr", "localhost:" + string(port), "http service address")
+
 
 var upgrader = websocket.Upgrader{} // use default options
 
