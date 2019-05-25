@@ -1,1 +1,1 @@
-web: bin/numberwang
+web: bin/Numberwang
