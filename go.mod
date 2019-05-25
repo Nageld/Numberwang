@@ -1,4 +1,4 @@
-module github.com/heroku/numberwang
+module Numberwang
 
 go 1.12
 
