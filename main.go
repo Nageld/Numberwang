@@ -89,9 +89,11 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("ws://https://numberwang.herokuapp.com/echo");
+        ws = new WebSocket("{{.}}");
+        print(JSON.stringify(ws))
         ws.onopen = function(evt) {
             print("OPEN");
+            
         }
         ws.onclose = function(evt) {
             print("CLOSE");
