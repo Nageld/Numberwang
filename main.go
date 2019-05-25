@@ -43,6 +43,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
+	fmt.Print(r.Host)
 	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
 }
 
@@ -51,7 +52,7 @@ func main() {
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
-	fmt.print(r.Host)
+	fmt.Print("started")
 	log.Fatal(http.ListenAndServe(":" + port, nil))
 }
 
