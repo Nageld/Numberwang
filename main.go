@@ -53,10 +53,12 @@ func echo(w http.ResponseWriter, r *http.Request) {
         log.Print(connections)
 
         
-        for _, connection := range connections {
+        for i, connection := range connections {
             if connection != nil{
                 err = connection.WriteMessage(mt, message)
                 if err != nil {
+                    connections = append(connections[:i], connections[i+1:]...)
+
                     log.Println("Write:", err)
                     break
                 }
