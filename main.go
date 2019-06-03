@@ -13,9 +13,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"github.com/gorilla/websocket"
 )
+
+var connections = make([]*websocket.Conn,3)
+
 
 var port = os.Getenv("PORT")
 
@@ -32,7 +34,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	log.SetOutput(file)
 	log.Print("test_print")
 
-	c, err := upgrader.Upgrade(w, r, nil)
+    c, err := upgrader.Upgrade(w, r, nil)
+    connections = append(connections, c)
+
 	if err != nil {
 		log.Print("Upgrade:", err)
 		return
@@ -44,27 +48,38 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			log.Println("Read:", err)
 			break
 		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("Write:", err)
-			break
-		}
+        log.Printf("recv: %s", message)
+
+        log.Print(connections)
+
+        
+        for _, connection := range connections {
+            if connection != nil{
+                err = connection.WriteMessage(mt, message)
+                if err != nil {
+                    log.Println("Write:", err)
+                    break
+                }
+            }
+            
+        }
 	}
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Print(r.Host)
 	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
 }
 
 func main() {
+
+
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
-	fmt.Print("started")
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	fmt.Println("started")
+    log.Fatal(http.ListenAndServe(":"+port, nil))
+
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
