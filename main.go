@@ -13,75 +13,81 @@ import (
 	"log"
 	"net/http"
 	"os"
+
 	"github.com/gorilla/websocket"
 )
 
-var connections = make([]*websocket.Conn,3)
-
+var connections = make([]*websocket.Conn, 0)
 
 var port = os.Getenv("PORT")
 
 var upgrader = websocket.Upgrader{} // use default options
 
+var hub = make(chan []byte, 30)
+
 func echo(w http.ResponseWriter, r *http.Request) {
 
+	// ----- Logging -----
 	file, err := os.OpenFile("go_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
 	defer file.Close()
-
 	log.SetOutput(file)
-	log.Print("test_print")
+	// ----- Logging -----
 
-    c, err := upgrader.Upgrade(w, r, nil)
-    connections = append(connections, c)
+	c, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
 		log.Print("Upgrade:", err)
 		return
 	}
 	defer c.Close()
+	connections = append(connections, c)
+
 	for {
-		mt, message, err := c.ReadMessage()
+		_, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("Read:", err)
 			break
 		}
-        log.Printf("recv: %s", message)
 
-        log.Print(connections)
+		log.Printf("recv: %s", message)
 
-        
-        for i, connection := range connections {
-            if connection != nil{
-                err = connection.WriteMessage(mt, message)
-                if err != nil {
-                    connections = append(connections[:i], connections[i+1:]...)
+		hub <- message
 
-                    log.Println("Write:", err)
-                    break
-                }
-            }
-            
-        }
 	}
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
+func FanOut(h <-chan []byte) {
+
+	for data := range h {
+		for i := range connections {
+			go worker(data, i)
+		}
+	}
+}
+
+func worker(message []byte, index int) {
+	connections[index].WriteMessage(1, message)
 }
 
 func main() {
-
 
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
-	fmt.Println("started")
-    log.Fatal(http.ListenAndServe(":"+port, nil))
 
+	go FanOut(hub)
+
+	fmt.Println("started")
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+
+}
+
+func home(w http.ResponseWriter, r *http.Request) {
+	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
