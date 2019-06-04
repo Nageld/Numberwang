@@ -13,7 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-
+    "strconv"
 	"github.com/gorilla/websocket"
 )
 
@@ -63,13 +63,18 @@ func FanOut(h <-chan []byte) {
 
 	for data := range h {
 		for i := range connections {
-			go worker(data, i)
+            go worker(data, i)
 		}
 	}
 }
 
 func worker(message []byte, index int) {
-	connections[index].WriteMessage(1, message)
+    user := []byte("User " + strconv.Itoa(index) + ":" + string(message))
+    fmt.Println(user)
+    err := connections[index].WriteMessage(1, user)
+    if err != nil {
+        connections[index].Close()
+    }
 }
 
 func main() {
