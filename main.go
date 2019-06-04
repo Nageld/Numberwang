@@ -43,7 +43,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer c.Close()
-	connections = append(connections, c)
+    connections = append(connections, c)
+    id := len(connections)
 
 	for {
 		_, message, err := c.ReadMessage()
@@ -54,7 +55,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("recv: %s", message)
 
-		hub <- message
+		hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message) ) 
 
 	}
 }
@@ -69,9 +70,7 @@ func FanOut(h <-chan []byte) {
 }
 
 func worker(message []byte, index int) {
-    user := []byte("User " + strconv.Itoa(index) + ":" + string(message))
-    fmt.Println(user)
-    err := connections[index].WriteMessage(1, user)
+    err := connections[index].WriteMessage(1, message)
     if err != nil {
         connections[index].Close()
     }
