@@ -72,7 +72,7 @@ func FanOut(h <-chan []byte) {
 func worker(message []byte, index int) {
     err := connections[index].WriteMessage(1, message)
     if err != nil {
-        connections[index].Close()
+        connections = append(connections[:index], connections[index+1:]...)
     }
 }
 
