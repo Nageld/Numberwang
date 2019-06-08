@@ -6,7 +6,7 @@ go_log.txt
 # ReactJS ignores
 
 # dependencies
-/node_modules
+views/node_modules
 /.pnp
 .pnp.js
 
