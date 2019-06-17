@@ -1,0 +1,14 @@
+version: "2"
+
+services:
+  app:
+    image: golang:1.12.6-alpine3.9
+    environment:
+      - PORT=8000
+    volumes:
+      - .:/go/src/Numberwang
+    ports:
+      - "8000:8000"
+    working_dir: /go/src/Numberwang
+    command: go run main.go
+
