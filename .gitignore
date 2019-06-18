@@ -1,6 +1,6 @@
 /src
 /pkg
-
+/tmp
 go_log.txt
 
 # ReactJS ignores

@@ -2,7 +2,7 @@ version: "2"
 
 services:
   app:
-    image: golang:1.12.6-alpine3.9
+    image: numberwang:1
     environment:
       - PORT=8000
     volumes:

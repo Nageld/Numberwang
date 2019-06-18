@@ -13,7 +13,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-    "strconv"
+	"strconv"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -43,8 +44,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer c.Close()
-    connections = append(connections, c)
-    id := len(connections)
+	connections = append(connections, c)
+	id := len(connections)
 
 	for {
 		_, message, err := c.ReadMessage()
@@ -55,7 +56,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("recv: %s", message)
 
-		hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message) ) 
+		hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message))
 
 	}
 }
@@ -64,20 +65,20 @@ func FanOut(h <-chan []byte) {
 
 	for data := range h {
 		for i := range connections {
-            go worker(data, i)
+			go worker(data, i)
 		}
 	}
 }
 
 func worker(message []byte, index int) {
-    err := connections[index].WriteMessage(1, message)
-    if err != nil {
-        connections = append(connections[:index], connections[index+1:]...)
-    }
+	err := connections[index].WriteMessage(1, message)
+	if err != nil {
+		connections = append(connections[:index], connections[index+1:]...)
+	}
 }
 
 func main() {
-
+	fmt.Println("r")
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
