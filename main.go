@@ -7,6 +7,7 @@
 package main
 
 import (
+	"Numberwang/lobby"
 	"flag"
 	"fmt"
 	"html/template"
@@ -18,29 +19,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// func (l lobby) delUser() {
-
-// }
-
-// var connections = make([]*websocket.Conn, 0)
-// var connections = make([]*send, 0)
+var lobbies = make([]*lobby.Lobby, 0)
 
 var port = os.Getenv("PORT")
 
 var upgrader = websocket.Upgrader{} // use default options
 
-var hub = make(chan []byte, 30)
+// var hub = make(chan []byte, 30)
 
 func echo(w http.ResponseWriter, r *http.Request) {
-
-	// ----- Logging -----
-	file, err := os.OpenFile("go_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer file.Close()
-	log.SetOutput(file)
-	// ----- Logging -----
 
 	c, err := upgrader.Upgrade(w, r, nil)
 
@@ -48,9 +35,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		log.Print("Upgrade:", err)
 		return
 	}
+
 	defer c.Close()
-	connections = append(connections, c)
-	id := len(connections)
+
+	// connections = append(connections, c)
+	// id := len(connections)
+
+	l, uid := addToLobby(c)
+	go l.Send()
 
 	for {
 		_, message, err := c.ReadMessage()
@@ -61,26 +53,35 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("recv: %s", message)
 
-		hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message))
+		l.Hub <- []byte("User " + strconv.Itoa(uid) + ": " + string(message))
+		// hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message))
 
 	}
 }
 
-// func fanOut(h <-chan []byte) {
+func addToLobby(conn *websocket.Conn) (*lobby.Lobby, int) {
+	lastLobbyID := 0
 
-// 	for data := range h {
-// 		for i := range connections {
-// 			go worker(data, i)
-// 		}
-// 	}
-// }
+	for ind, l := range lobbies {
+		lastLobbyID = ind
+		if l.OccupiedSlots != len(l.Users) {
+			l.AddUser(&lobby.User{ind, conn})
+			return l, ind
+		}
+	}
 
-// func worker(message []byte, index int) {
-// 	err := connections[index].WriteMessage(1, message)
-// 	if err != nil {
-// 		connections = append(connections[:index], connections[index+1:]...)
-// 	}
-// }
+	l := lobby.Lobby{
+		"Lobby " + string(lastLobbyID),
+		lastLobbyID,
+		[5]*lobby.User{},
+		make(chan []byte, 30),
+		0,
+	}
+
+	lobbies = append(lobbies, &l)
+
+	return &l, lastLobbyID
+}
 
 func main() {
 

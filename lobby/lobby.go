@@ -3,31 +3,31 @@ package lobby
 import "github.com/gorilla/websocket"
 
 type Lobby struct {
-	name          string
-	id            int
-	users         [5]*user
-	hub           chan []byte
-	occupiedSlots int
+	Name          string
+	ID            int
+	Users         [5]*User
+	Hub           chan []byte
+	OccupiedSlots int
 }
 
-type user struct {
-	uid        int
-	connection *websocket.Conn
+type User struct {
+	ID         int
+	Connection *websocket.Conn
 }
 
-func (l *Lobby) send() {
-	for msg := range l.hub {
-		for _, u := range l.users {
-			go worker(msg, u.connection)
+func (l *Lobby) Send() {
+	for msg := range l.Hub {
+		for _, u := range l.Users {
+			go worker(msg, u.Connection)
 		}
 	}
 }
 
-func (l *Lobby) addUser(newUser *user) {
-	for ind, user := range l.users {
-		if user == nil {
-			l.users[ind] = newUser
-			l.occupiedSlots++
+func (l *Lobby) AddUser(newUser *User) {
+	for ind, u := range l.Users {
+		if u == nil {
+			l.Users[ind] = newUser
+			l.OccupiedSlots++
 		}
 	}
 
