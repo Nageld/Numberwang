@@ -18,12 +18,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// func (l lobby) delUser() {
+type user struct {
+	uid        int
+	connection websocket.Conn
+}
 
-// }
-
-// var connections = make([]*websocket.Conn, 0)
-// var connections = make([]*send, 0)
+var connections = make([]*websocket.Conn, 0)
 
 var port = os.Getenv("PORT")
 
@@ -66,28 +66,29 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func fanOut(h <-chan []byte) {
+func fanOut(h <-chan []byte) {
 
-// 	for data := range h {
-// 		for i := range connections {
-// 			go worker(data, i)
-// 		}
-// 	}
-// }
+	for data := range h {
+		for i := range connections {
+			go worker(data, i)
+		}
+	}
+}
 
-// func worker(message []byte, index int) {
-// 	err := connections[index].WriteMessage(1, message)
-// 	if err != nil {
-// 		connections = append(connections[:index], connections[index+1:]...)
-// 	}
-// }
+func worker(message []byte, index int) {
+	err := connections[index].WriteMessage(1, message)
+	if err != nil {
+		connections = append(connections[:index], connections[index+1:]...)
+	}
+}
 
 func main() {
-
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
+
+	go fanOut(hub)
 
 	fmt.Println("started")
 	log.Fatal(http.ListenAndServe(":"+port, nil))
