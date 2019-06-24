@@ -1,6 +1,8 @@
 package lobby
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+)
 
 type Lobby struct {
 	Name          string
@@ -18,7 +20,11 @@ type User struct {
 func (l *Lobby) Send() {
 	for msg := range l.Hub {
 		for _, u := range l.Users {
-			go worker(msg, u.Connection)
+			if u != nil {
+				_ = u
+				go worker(msg, u.Connection)
+			}
+
 		}
 	}
 }

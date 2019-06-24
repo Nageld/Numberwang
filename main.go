@@ -42,6 +42,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	// id := len(connections)
 
 	l, uid := addToLobby(c)
+	fmt.Println("Connection opened in \nLobby: " + strconv.Itoa(l.ID) + "\nUser: " + strconv.Itoa(uid))
 	go l.Send()
 
 	for {
@@ -78,6 +79,8 @@ func addToLobby(conn *websocket.Conn) (*lobby.Lobby, int) {
 		0,
 	}
 
+	l.Users[0] = &lobby.User{0, conn}
+
 	lobbies = append(lobbies, &l)
 
 	return &l, lastLobbyID
@@ -90,7 +93,8 @@ func main() {
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
 
-	fmt.Println("started")
+	fmt.Println("main.go Started")
+
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 
 }
