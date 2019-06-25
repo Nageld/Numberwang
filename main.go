@@ -99,7 +99,7 @@ func main() {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
+	homeTemplate.Execute(w, "wss://"+r.Host+"/echo")
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
