@@ -1,9 +1,12 @@
+// Copyright 2015 The Gorilla WebSocket Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // +build linux
 
 package main
 
 import (
-	"Numberwang/lobby"
 	"flag"
 	"fmt"
 	"html/template"
@@ -15,13 +18,29 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var lobbies = make([]*lobby.Lobby, 0)
+type user struct {
+	uid        int
+	connection websocket.Conn
+}
+
+var connections = make([]*websocket.Conn, 0)
 
 var port = os.Getenv("PORT")
 
 var upgrader = websocket.Upgrader{} // use default options
 
+var hub = make(chan []byte, 30)
+
 func echo(w http.ResponseWriter, r *http.Request) {
+
+	// ----- Logging -----
+	file, err := os.OpenFile("go_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer file.Close()
+	log.SetOutput(file)
+	// ----- Logging -----
 
 	c, err := upgrader.Upgrade(w, r, nil)
 
@@ -29,18 +48,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		log.Print("Upgrade:", err)
 		return
 	}
-
 	defer c.Close()
-
-	l, uid := addToLobby(c)
-	fmt.Println("Connection opened in \nLobby: " + strconv.Itoa(l.ID) + "\nUser: " + strconv.Itoa(uid))
-	fmt.Println("-----------------------------")
-
-	for _, l := range lobbies {
-		fmt.Println(l)
-	}
-
-	go l.Send()
+	connections = append(connections, c)
+	id := len(connections)
 
 	for {
 		_, message, err := c.ReadMessage()
@@ -49,51 +59,38 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Printf("Lobby: %d User: %d \nSent: %s", l.ID, uid, message)
+		log.Printf("recv: %s", message)
 
-		l.Hub <- []byte("User " + strconv.Itoa(uid) + ": " + string(message))
+		hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message))
 
 	}
 }
 
-func addToLobby(conn *websocket.Conn) (*lobby.Lobby, int) {
-	lastLobbyID := 0
+func fanOut(h <-chan []byte) {
 
-	// Go through lobbies and see if there is an empty user slot in any existing lobbies
-	for ind, l := range lobbies {
-		lastLobbyID = ind
-		if l.OccupiedSlots != len(l.Users) {
-			uid := l.AddUser(conn)
-			return l, uid
+	for data := range h {
+		for i := range connections {
+			go worker(data, i)
 		}
 	}
+}
 
-	// If every lobby is full or there are no lobbies
-	l := lobby.Lobby{
-		"Lobby " + string(lastLobbyID),
-		len(lobbies),
-		[5]*lobby.User{},
-		make(chan []byte, 30),
-		0,
+func worker(message []byte, index int) {
+	err := connections[index].WriteMessage(1, message)
+	if err != nil {
+		connections = append(connections[:index], connections[index+1:]...)
 	}
-
-	uid := l.AddUser(conn)
-	go l.Ping()
-
-	lobbies = append(lobbies, &l)
-
-	return &l, uid
 }
 
 func main() {
-
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
 
-	fmt.Println("main.go Started")
+	go fanOut(hub)
 
+	fmt.Println("started")
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 
 }
