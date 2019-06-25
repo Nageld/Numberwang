@@ -1,3 +1,15 @@
+# Instructions:
+1. Install docker
+2. Install docker-compose
+3. If running Windows setup WSL to connect to docker
+4. run `make default`
+5. run `docker-compose up`
+6. If running Ubuntu:
+	* The container will have working hot reloading
+	* After saving a .go file the container will rebuild the app 
+7. If not Ubuntu:
+	*  Stop and start the container after any changes to reload.
+
 # Functional Requirements:
 
 1.  User Connection
