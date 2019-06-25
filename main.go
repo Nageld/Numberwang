@@ -1,7 +1,3 @@
-// Copyright 2015 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 // +build linux
 
 package main
@@ -25,8 +21,6 @@ var port = os.Getenv("PORT")
 
 var upgrader = websocket.Upgrader{} // use default options
 
-// var hub = make(chan []byte, 30)
-
 func echo(w http.ResponseWriter, r *http.Request) {
 
 	c, err := upgrader.Upgrade(w, r, nil)
@@ -38,11 +32,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 	defer c.Close()
 
-	// connections = append(connections, c)
-	// id := len(connections)
-
 	l, uid := addToLobby(c)
 	fmt.Println("Connection opened in \nLobby: " + strconv.Itoa(l.ID) + "\nUser: " + strconv.Itoa(uid))
+	fmt.Println("-----------------------------")
+
+	for _, l := range lobbies {
+		fmt.Println(l)
+	}
+
 	go l.Send()
 
 	for {
@@ -52,10 +49,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Printf("recv: %s", message)
+		log.Printf("Lobby: %d User: %d \nSent: %s", l.ID, uid, message)
 
 		l.Hub <- []byte("User " + strconv.Itoa(uid) + ": " + string(message))
-		// hub <- []byte("User " + strconv.Itoa(id) + ": " + string(message))
 
 	}
 }
@@ -63,27 +59,30 @@ func echo(w http.ResponseWriter, r *http.Request) {
 func addToLobby(conn *websocket.Conn) (*lobby.Lobby, int) {
 	lastLobbyID := 0
 
+	// Go through lobbies and see if there is an empty user slot in any existing lobbies
 	for ind, l := range lobbies {
 		lastLobbyID = ind
 		if l.OccupiedSlots != len(l.Users) {
-			l.AddUser(&lobby.User{ind, conn})
-			return l, ind
+			uid := l.AddUser(conn)
+			return l, uid
 		}
 	}
 
+	// If every lobby is full or there are no lobbies
 	l := lobby.Lobby{
 		"Lobby " + string(lastLobbyID),
-		lastLobbyID,
+		len(lobbies),
 		[5]*lobby.User{},
 		make(chan []byte, 30),
 		0,
 	}
 
-	l.Users[0] = &lobby.User{0, conn}
+	uid := l.AddUser(conn)
+	go l.Ping()
 
 	lobbies = append(lobbies, &l)
 
-	return &l, lastLobbyID
+	return &l, uid
 }
 
 func main() {

@@ -1,6 +1,10 @@
 package lobby
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -22,26 +26,49 @@ func (l *Lobby) Send() {
 		for _, u := range l.Users {
 			if u != nil {
 				_ = u
-				go worker(msg, u.Connection)
+				go worker(msg, u, l)
 			}
 
 		}
 	}
 }
 
-func (l *Lobby) AddUser(newUser *User) {
+func (l *Lobby) Ping() {
+	for {
+		time.Sleep(5 * time.Second)
+
+		for _, u := range l.Users {
+			if u != nil {
+				_ = u
+				go worker([]byte(""), u, l)
+			}
+
+		}
+	}
+}
+
+func (l *Lobby) AddUser(conn *websocket.Conn) int {
+	newUser := User{-1, conn}
+
 	for ind, u := range l.Users {
 		if u == nil {
-			l.Users[ind] = newUser
+			newUser.ID = ind
+			l.Users[ind] = &newUser
 			l.OccupiedSlots++
+			return ind
 		}
 	}
 
+	return 0
+
 }
 
-func worker(message []byte, conn *websocket.Conn) {
-	err := conn.WriteMessage(1, message)
+func worker(message []byte, user *User, lobby *Lobby) {
+	err := user.Connection.WriteMessage(1, message)
 	if err != nil {
-		// connections = append(connections[:index], connections[index+1:]...)
+		lobby.Users[user.ID] = nil
+		fmt.Println("Removed: " + "\nUser: " + strconv.Itoa(user.ID) + "\nLobby: " + strconv.Itoa(lobby.ID))
+		lobby.OccupiedSlots--
 	}
+
 }
