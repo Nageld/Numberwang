@@ -3,7 +3,7 @@
 package main
 
 import (
-	"Numberwang/lobby"
+	"Numberwang/lobutils"
 	"flag"
 	"fmt"
 	"html/template"
@@ -12,16 +12,19 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
-var lobbies = make([]*lobby.Lobby, 0)
+var lobbies = make([]*lobutils.Lobby, 0)
 
 var port = os.Getenv("PORT")
 
 var upgrader = websocket.Upgrader{} // use default options
 
 func echo(w http.ResponseWriter, r *http.Request) {
+
+	// testTemplate.Execute(w, lobbies)
 
 	c, err := upgrader.Upgrade(w, r, nil)
 
@@ -56,7 +59,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func addToLobby(conn *websocket.Conn) (*lobby.Lobby, int) {
+func addToLobby(conn *websocket.Conn) (*lobutils.Lobby, int) {
 	lastLobbyID := 0
 
 	// Go through lobbies and see if there is an empty user slot in any existing lobbies
@@ -69,10 +72,11 @@ func addToLobby(conn *websocket.Conn) (*lobby.Lobby, int) {
 	}
 
 	// If every lobby is full or there are no lobbies
-	l := lobby.Lobby{
+	l := lobutils.Lobby{
 		"Lobby " + string(lastLobbyID),
 		len(lobbies),
-		[5]*lobby.User{},
+		uuid.New(),
+		[5]*lobutils.User{},
 		make(chan []byte, 30),
 		0,
 	}
@@ -90,6 +94,7 @@ func main() {
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
+	// http.HandleFunc("/potato", testHome)
 	http.HandleFunc("/", home)
 
 	fmt.Println("main.go Started")
@@ -99,7 +104,13 @@ func main() {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, "wss://"+r.Host+"/echo")
+	// homeTemplate.Execute(w, "wss://"+r.Host+"/echo")
+	homeTemplate.Execute(w, "ws://"+r.Host+"/echo") // Use this line when debugging locally
+
+}
+
+func testHome(w http.ResponseWriter, r *http.Request) {
+	testTemplate.Execute(w, lobbies)
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
@@ -135,7 +146,10 @@ window.addEventListener("load", function(evt) {
             ws = null;
         }
         ws.onmessage = function(evt) {
-            print("RESPONSE: " + evt.data);
+			if (evt.data != "") {
+				print("RESPONSE: " + evt.data);
+			}
+
         }
         ws.onerror = function(evt) {
             print("ERROR: " + evt.data);
@@ -179,6 +193,18 @@ You can change the message and send multiple times.
 </td><td valign="top" width="50%">
 <div id="output"></div>
 </td></tr></table>
+</body>
+</html>
+`))
+
+var testTemplate = template.Must(template.New("").Parse(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+{{.}}
 </body>
 </html>
 `))

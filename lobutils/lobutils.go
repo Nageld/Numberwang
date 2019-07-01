@@ -1,16 +1,18 @@
-package lobby
+package lobutils
 
 import (
 	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type Lobby struct {
 	Name          string
 	ID            int
+	UUID          uuid.UUID
 	Users         [5]*User
 	Hub           chan []byte
 	OccupiedSlots int
@@ -48,6 +50,22 @@ func (l *Lobby) Ping() {
 }
 
 func (l *Lobby) AddUser(conn *websocket.Conn) int {
+	newUser := User{-1, conn}
+
+	for ind, u := range l.Users {
+		if u == nil {
+			newUser.ID = ind
+			l.Users[ind] = &newUser
+			l.OccupiedSlots++
+			return ind
+		}
+	}
+
+	return 0
+
+}
+
+func (l *Lobby) AddToLobby(conn *websocket.Conn, uid uuid.UUID) int {
 	newUser := User{-1, conn}
 
 	for ind, u := range l.Users {
