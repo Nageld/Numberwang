@@ -20,7 +20,13 @@ var lobbies = make([]*lobutils.Lobby, 0)
 
 var port = os.Getenv("PORT")
 
-var upgrader = websocket.Upgrader{} // use default options
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool {
+        return true
+    },
+} // use default options
 
 func echo(w http.ResponseWriter, r *http.Request) {
 
