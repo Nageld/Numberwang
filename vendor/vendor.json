@@ -1,3 +1,8 @@
 {
-    "rootPath": "github.com/heroku/Numberwang/"
+    "rootPath": "github.com/heroku/Numberwang/",
+    "heroku": {
+        "install": [
+            "./cmd/..."
+        ]
+    }
 }
