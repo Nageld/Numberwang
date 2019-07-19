@@ -7,8 +7,11 @@ COPY . /go/src/Numberwang
 RUN cd /go/src/Numberwang && go get -d -v ./...
 
 RUN go install -v ./...
-RUN ["go", "get", "github.com/githubnemo/CompileDaemon"]
 RUN go build -o goapp
+ENTRYPOINT ./goapp
+
+FROM build-env AS local
+RUN ["go", "get", "github.com/githubnemo/CompileDaemon"]
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go install ." -command="Numberwang"
 
 
