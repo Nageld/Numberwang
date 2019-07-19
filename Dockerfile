@@ -1,17 +1,20 @@
-FROM golang:1.10.4
+FROM golang:1.10.4 AS build-env
 
 WORKDIR /go/src/Numberwang
 
-COPY . .
+COPY . /go/src/Numberwang
 
-RUN go get -d -v ./...
+RUN cd /go/src/Numberwang && go get -d -v ./...
+
 RUN go install -v ./...
 RUN ["go", "get", "github.com/githubnemo/CompileDaemon"]
-
-# EXPOSE 8000
-# ENV PORT=8000
-
+RUN go build -o goapp
 ENTRYPOINT CompileDaemon -log-prefix=false -build="go install ." -command="Numberwang"
 
-# CMD ["app"]
 
+
+# final stage
+FROM alpine
+WORKDIR /app
+COPY --from=build-env /go/src/Numberwang/goapp /Numberwang/
+ENTRYPOINT ./goapp
