@@ -2,7 +2,7 @@ version: "2"
 
 services:
   app:
-    image: numberwang:1
+    image: numberwang:latest
     environment:
       - PORT=8000
     volumes:

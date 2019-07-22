@@ -1,6 +1,6 @@
 default:
 	@echo "=============building Local API============="
-	docker build -f Dockerfile -t numberwang:1 .
+	docker build -t numberwang . --target=local
 
 up: default
 	@echo "=============starting api locally============="

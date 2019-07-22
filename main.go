@@ -96,7 +96,6 @@ func addToLobby(conn *websocket.Conn) (*lobutils.Lobby, int) {
 }
 
 func main() {
-
 	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/echo", echo)
@@ -111,7 +110,7 @@ func main() {
 
 func home(w http.ResponseWriter, r *http.Request) {
 	// homeTemplate.Execute(w, "wss://"+r.Host+"/echo")
-	homeTemplate.Execute(w, "ws://"+r.Host+"/echo") // Use this line when debugging locally
+	homeTemplate.Execute(w, "wss://"+r.Host+"/echo")
 
 }
 
